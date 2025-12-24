@@ -2,243 +2,207 @@ import { useState, useEffect } from 'react';
 import { rescueOperationsAPI } from '../services/api';
 
 function RescueOperations() {
-   // ========================================
-   // STATE MANAGEMENT
-   // ========================================
    const [operations, setOperations] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
    const [showForm, setShowForm] = useState(false);
    const [editingOperation, setEditingOperation] = useState(null);
 
-   // FORM DATA STATE
+   // ✅ FIXED: team_size = 1, status = 'initiated'
    const [formData, setFormData] = useState({
       operation_name: '',
       location: '',
       operation_type: 'rescue',
       priority: 'medium',
-      status: 'active',
-      team_size: 0,
+      status: 'initiated',  // ✅ Changed from 'active'
+      team_size: 1,         // ✅ Changed from 0
       start_time: '',
-      description: ''
+      description: '',
+      help_request_id: 1  
    });
 
-   // ========================================
-   // FETCH ALL RESCUE OPERATIONS (READ)
-   // ========================================
    const fetchOperations = async () => {
       try {
          console.log('📡 Fetching rescue operations...');
          setLoading(true);
          setError(null);
 
-         // Call backend API (GET http://localhost:8081/api/v1/rescue-operations)
          const response = await rescueOperationsAPI.getAll();
-
          setOperations(response.data || []);
          console.log('✅ Fetched', response.data.length, 'operations');
 
       } catch (err) {
          console.error('❌ Error:', err);
          setError('Failed to load rescue operations. Make sure backend is running.');
-
       } finally {
          setLoading(false);
       }
    };
 
-   // Run when page loads
    useEffect(() => {
       fetchOperations();
    }, []);
 
-   // ========================================
-   // HANDLE INPUT CHANGES
-   // ========================================
    const handleInputChange = (e) => {
       const { name, value } = e.target;
-
       setFormData(prev => ({
          ...prev,
          [name]: value
       }));
-
       console.log(`📝 ${name} = ${value}`);
    };
 
-   // ========================================
-   // CREATE OR UPDATE OPERATION
-   // ========================================
+   // ✅ FIXED: Added operation_name to payload
    const handleSubmit = async (e) => {
       e.preventDefault();
 
-      // If editing, use UPDATE function
       if (editingOperation) {
          return handleUpdate(e);
       }
 
-      // Otherwise, CREATE new operation
       try {
          console.log('📤 Creating new operation...', formData);
 
-         // Validate required fields
-         if (!formData.operation_name || !formData.location || !formData.start_time) {
-            alert('❌ Operation name, location, and start time are required!');
+         // Validation
+         if (!formData.operation_name || !formData.location || !formData.start_time || formData.team_size <= 0) {
+            alert('❌ Operation name, location, start time, and team size are required!');
             return;
          }
 
-         // Call backend API (POST http://localhost:8081/api/v1/rescue-operations)
-         await rescueOperationsAPI.create(formData);
+         // ✅ FIXED: Added operation_name
+         const payload = {
+            operation_name: formData.operation_name,  // ✅ ADDED!
+            help_request_id: Number(formData.help_request_id) || 1,
+            team_size: Number(formData.team_size),
+            vehicle_type: formData.operation_type,
+            location: formData.location,
+            priority: formData.priority,
+            status: formData.status,
+            start_time: new Date(formData.start_time).toISOString()
+         };
 
-         console.log('✅ Operation created successfully!');
+         console.log('📦 Payload sent to backend:', payload);
+
+         await rescueOperationsAPI.create(payload);
+
          alert('✅ Rescue operation created successfully!');
 
-         // Reset form
+         // ✅ FIXED: Reset with correct defaults
          setFormData({
             operation_name: '',
             location: '',
             operation_type: 'rescue',
             priority: 'medium',
-            status: 'active',
-            team_size: 0,
+            status: 'initiated',
+            team_size: 1,
             start_time: '',
-            description: ''
+            description: '',
+            help_request_id: 1
          });
 
-         // Hide form
          setShowForm(false);
-
-         // Refresh list
          fetchOperations();
 
       } catch (err) {
-         console.error('❌ Error creating operation:', err);
-         alert('❌ Failed to create rescue operation. Check console for details.');
+         console.error('❌ Error creating operation:', err.response?.data || err);
+         alert(`❌ Failed to create rescue operation: ${err.response?.data?.error || err.message}`);
       }
    };
 
-   // ========================================
-   // UPDATE EXISTING OPERATION
-   // ========================================
    const handleEdit = (operation) => {
       console.log('✏️ Editing operation:', operation);
-
-      // Set the operation being edited
       setEditingOperation(operation);
 
-      // Convert start_time to datetime-local format
       const startTime = operation.start_time ? new Date(operation.start_time).toISOString().slice(0, 16) : '';
 
-      // Fill form with existing data
       setFormData({
-         operation_name: operation.operation_name,
-         location: operation.location,
-         operation_type: operation.operation_type,
-         priority: operation.priority,
-         status: operation.status,
-         team_size: operation.team_size || 0,
+         operation_name: operation.operation_name || '',
+         help_request_id: operation.help_request_id || 1,
+         location: operation.location || '',
+         operation_type: operation.vehicle_type || 'rescue',  // ✅ Using vehicle_type from backend
+         priority: operation.priority || 'medium',
+         status: operation.status || 'initiated',
+         team_size: operation.team_size || 1,
          start_time: startTime,
          description: operation.description || ''
       });
 
-      // Show form
       setShowForm(true);
    };
 
-   // SAVE UPDATED OPERATION
    const handleUpdate = async (e) => {
       e.preventDefault();
 
       try {
-         console.log('📤 Updating operation ID:', editingOperation.id, formData);
+         console.log('📤 Updating operation ID:', editingOperation.id);
 
-         // Validate required fields
-         if (!formData.operation_name || !formData.location || !formData.start_time) {
-            alert('❌ Operation name, location, and start time are required!');
+         if (!formData.operation_name || !formData.location || !formData.start_time || formData.team_size <= 0) {
+            alert('❌ Operation name, location, start time, and team size are required!');
             return;
          }
 
-         // Call backend API (PUT http://localhost:8081/api/v1/rescue-operations/:id)
-         await rescueOperationsAPI.update(editingOperation.id, formData);
+         // ✅ FIXED: Includes operation_name
+         const payload = {
+            operation_name: formData.operation_name,
+            help_request_id: Number(formData.help_request_id) || 1,
+            team_size: Number(formData.team_size),
+            vehicle_type: formData.operation_type,
+            location: formData.location,
+            priority: formData.priority,
+            status: formData.status,
+            start_time: new Date(formData.start_time).toISOString()
+         };
 
-         console.log('✅ Operation updated successfully!');
+         console.log('📦 Update payload:', payload);
+
+         await rescueOperationsAPI.update(editingOperation.id, payload);
+
          alert('✅ Rescue operation updated successfully!');
 
-         // Reset form
-         setFormData({
-            operation_name: '',
-            location: '',
-            operation_type: 'rescue',
-            priority: 'medium',
-            status: 'active',
-            team_size: 0,
-            start_time: '',
-            description: ''
-         });
-
-         // Clear editing state
          setEditingOperation(null);
-
-         // Hide form
          setShowForm(false);
-
-         // Refresh list
          fetchOperations();
 
       } catch (err) {
-         console.error('❌ Error updating operation:', err);
-         alert('❌ Failed to update rescue operation. Check console for details.');
+         console.error('❌ Error updating operation:', err.response?.data || err);
+         alert(`❌ Failed to update: ${err.response?.data?.error || err.message}`);
       }
    };
 
-   // ========================================
-   // CANCEL EDITING
-   // ========================================
    const handleCancelEdit = () => {
+      // ✅ FIXED: Correct defaults
       setFormData({
          operation_name: '',
          location: '',
          operation_type: 'rescue',
          priority: 'medium',
-         status: 'active',
-         team_size: 0,
+         status: 'initiated',
+         team_size: 1,
          start_time: '',
-         description: ''
+         description: '',
+         help_request_id: 1
       });
       setEditingOperation(null);
       setShowForm(false);
    };
 
-   // ========================================
-   // DELETE OPERATION
-   // ========================================
    const handleDelete = async (id) => {
-      // Confirmation dialog
       if (!window.confirm('⚠️ Are you sure you want to delete this rescue operation?')) {
          return;
       }
 
       try {
          console.log('🗑️ Deleting operation ID:', id);
-
-         // Call backend API (DELETE http://localhost:8081/api/v1/rescue-operations/:id)
          await rescueOperationsAPI.delete(id);
-
          console.log('✅ Operation deleted successfully!');
          alert('✅ Rescue operation deleted successfully!');
-
-         // Refresh list
          fetchOperations();
-
       } catch (err) {
          console.error('❌ Error deleting operation:', err);
          alert('❌ Failed to delete rescue operation. Check console for details.');
       }
    };
 
-   // ========================================
-   // LOADING STATE
-   // ========================================
    if (loading) {
       return (
          <div className="flex items-center justify-center min-h-screen">
@@ -250,16 +214,14 @@ function RescueOperations() {
       );
    }
 
-   // ========================================
-   // RENDER UI
-   // ========================================
    return (
       <div className="container mx-auto px-4 py-8">
-         {/* Header */}
          <div className="flex justify-between items-center mb-8">
             <div>
                <h1 className="text-3xl font-bold text-gray-800">🚁 Rescue Operations</h1>
-               <p className="text-gray-600 mt-1">Total: {operations.length} | Active: {operations.filter(o => o.status === 'active').length}</p>
+               <p className="text-gray-600 mt-1">
+                  Total: {operations.length} | Active: {operations.filter(o => o.status === 'initiated' || o.status === 'in-progress').length}
+               </p>
             </div>
             <button
                onClick={() => setShowForm(!showForm)}
@@ -269,14 +231,12 @@ function RescueOperations() {
             </button>
          </div>
 
-         {/* Error Message */}
          {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                ❌ {error}
             </div>
          )}
 
-         {/* CREATE/EDIT FORM */}
          {showForm && (
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                <h2 className="text-2xl font-bold mb-6 text-gray-800">
@@ -284,7 +244,6 @@ function RescueOperations() {
                </h2>
 
                <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Operation Name */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Operation Name <span className="text-red-500">*</span>
@@ -300,9 +259,7 @@ function RescueOperations() {
                      />
                   </div>
 
-                  {/* Location & Start Time */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     {/* Location */}
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
                            Location <span className="text-red-500">*</span>
@@ -318,7 +275,6 @@ function RescueOperations() {
                         />
                      </div>
 
-                     {/* Start Time */}
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
                            Start Time <span className="text-red-500">*</span>
@@ -334,9 +290,7 @@ function RescueOperations() {
                      </div>
                   </div>
 
-                  {/* Operation Type, Priority, Status */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     {/* Operation Type */}
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
                            Operation Type
@@ -355,7 +309,6 @@ function RescueOperations() {
                         </select>
                      </div>
 
-                     {/* Priority */}
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
                            Priority
@@ -366,48 +319,68 @@ function RescueOperations() {
                            onChange={handleInputChange}
                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                         >
-                           <option value="low">Low</option>
-                           <option value="medium">Medium</option>
-                           <option value="high">High</option>
-                           <option value="critical">Critical</option>
+                           <option value="low">🟢 Low</option>
+                           <option value="medium">🟡 Medium</option>
+                           <option value="high">🟠 High</option>
+                           <option value="critical">🔴 Critical</option>
                         </select>
                      </div>
 
-                     {/* Status */}
+                     <div>
+                        <label className="block text-gray-700 font-semibold mb-2">
+                           🆔 Help Request ID
+                        </label>
+                        <input
+                           type="number"
+                           name="help_request_id"
+                           value={formData.help_request_id}
+                           onChange={handleInputChange}
+                           required
+                           min="1"
+                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                           placeholder="Enter help request ID"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                           💡 Link this operation to a help request
+                        </p>
+                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
                            Status
                         </label>
-                        <select
-                           name="status"
-                           value={formData.status}
+                        <select 
+                           name="status" 
+                           value={formData.status} 
                            onChange={handleInputChange}
-                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                         >
-                           <option value="active">Active</option>
-                           <option value="completed">Completed</option>
-                           <option value="cancelled">Cancelled</option>
+                           <option value="initiated">🔵 Initiated</option>
+                           <option value="in-progress">🟡 In Progress</option>
+                           <option value="completed">🟢 Completed</option>
+                           <option value="failed">🔴 Failed</option>
                         </select>
+                     </div>
+
+                     <div>
+                        <label className="block text-gray-700 font-semibold mb-2">
+                           Team Size <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                           type="number"
+                           name="team_size" 
+                           value={formData.team_size}
+                           onChange={handleInputChange}
+                           required
+                           min="1"   
+                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                           placeholder="Number of team members (minimum 1)"
+                        />
                      </div>
                   </div>
 
-                  {/* Team Size */}
-                  <div>
-                     <label className="block text-gray-700 font-semibold mb-2">
-                        Team Size
-                     </label>
-                     <input
-                        type="number"
-                        name="team_size"
-                        value={formData.team_size}
-                        onChange={handleInputChange}
-                        min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="Number of team members"
-                     />
-                  </div>
-
-                  {/* Description */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Description
@@ -422,7 +395,6 @@ function RescueOperations() {
                      ></textarea>
                   </div>
 
-                  {/* Submit Buttons */}
                   <div className="flex gap-4 pt-4">
                      <button
                         type="submit"
@@ -442,7 +414,6 @@ function RescueOperations() {
             </div>
          )}
 
-         {/* TABLE - Display All Operations */}
          <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="min-w-full">
                <thead className="bg-gray-100">
@@ -472,13 +443,14 @@ function RescueOperations() {
                         <tr key={operation.id} className="hover:bg-gray-50">
                            <td className="px-6 py-4 text-sm text-gray-900">#{operation.id}</td>
                            <td className="px-6 py-4 text-sm font-semibold text-gray-900">{operation.operation_name}</td>
+                           {/* ✅ FIXED: Using vehicle_type from backend */}
                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {operation.operation_type === 'rescue' && '🚁'}
-                              {operation.operation_type === 'evacuation' && '🚶'}
-                              {operation.operation_type === 'relief' && '📦'}
-                              {operation.operation_type === 'medical' && '🏥'}
-                              {operation.operation_type === 'search' && '🔍'}
-                              {' '}{operation.operation_type}
+                              {operation.vehicle_type === 'rescue' && '🚁'}
+                              {operation.vehicle_type === 'evacuation' && '🚶'}
+                              {operation.vehicle_type === 'relief' && '📦'}
+                              {operation.vehicle_type === 'medical' && '🏥'}
+                              {operation.vehicle_type === 'search' && '🔍'}
+                              {' '}{operation.vehicle_type}
                            </td>
                            <td className="px-6 py-4 text-sm text-gray-900">{operation.location}</td>
                            <td className="px-6 py-4 text-sm text-gray-900">
@@ -497,7 +469,7 @@ function RescueOperations() {
                            </td>
                            <td className="px-6 py-4">
                               <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                 operation.status === 'active' ? 'bg-green-100 text-green-800' :
+                                 operation.status === 'initiated' || operation.status === 'in-progress' ? 'bg-green-100 text-green-800' :
                                  operation.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                                  'bg-gray-100 text-gray-800'
                               }`}>

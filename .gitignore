@@ -1,0 +1,28 @@
+# Sensitive files
+.env
+*.env
+
+# Backend
+backend/.env
+backend/tmp/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.npm-cache/
+
+# Cache
+.npm-cache/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

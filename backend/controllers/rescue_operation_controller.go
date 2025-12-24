@@ -24,10 +24,15 @@ func CreateRescueOperation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//validation
-	if operation.HelpRequestID == 0 || operation.TeamSize <= 0 || operation.Location == "" {
+	// Required fields
+	if operation.OperationName == "" || operation.TeamSize <= 0 || operation.Location == "" {
 		http.Error(w, `{"error":"Missing required fields"}`, http.StatusBadRequest)
 		return
+	}
+
+	// Default help_request_id
+	if operation.HelpRequestID == 0 {
+		operation.HelpRequestID = 1
 	}
 
 	//validation status
@@ -148,10 +153,7 @@ func GetRescueOperationByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// UpdateRescueOperation - PUT
 func UpdateRescueOperation(w http.ResponseWriter, r *http.Request) {
-
-	// Get ID from URL
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -159,98 +161,85 @@ func UpdateRescueOperation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find existing operation
-	var existingOperation models.RescueOperation
+	var existing models.RescueOperation
 	db := config.GetDB()
-	result := db.First(&existingOperation, id)
-	if result.Error != nil {
+
+	if err := db.First(&existing, id).Error; err != nil {
 		http.Error(w, `{"error":"Rescue operation not found"}`, http.StatusNotFound)
 		return
 	}
 
-	// Decode request body
-	var updateData models.RescueOperation
-	err = json.NewDecoder(r.Body).Decode(&updateData)
-
-	if err != nil {
+	var update models.RescueOperation
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		http.Error(w, `{"error":"Invalid JSON format"}`, http.StatusBadRequest)
 		return
 	}
 
-	// update fields
-	if updateData.TeamSize > 0 {
-		existingOperation.TeamSize = updateData.TeamSize
+	// Update allowed fields
+	if update.OperationName != "" {
+		existing.OperationName = update.OperationName
 	}
-	if updateData.VehicleType != "" {
-		existingOperation.VehicleType = updateData.VehicleType
+	if update.TeamSize > 0 {
+		existing.TeamSize = update.TeamSize
 	}
-	if updateData.Location != "" {
-		existingOperation.Location = updateData.Location
+	if update.VehicleType != "" {
+		existing.VehicleType = update.VehicleType
 	}
-	if updateData.Status != "" {
-		validStatus := []string{"initiated", "in-progress", "completed", "failed"}
-		isValid := false
-		for _, status := range validStatus {
-			if updateData.Status == status {
-				isValid = true
-				break
-			}
+	if update.Location != "" {
+		existing.Location = update.Location
+	}
+
+	// Validate status
+	if update.Status != "" {
+		valid := map[string]bool{
+			"initiated":   true,
+			"in-progress": true,
+			"completed":   true,
+			"failed":      true,
 		}
-		if !isValid {
-			http.Error(w, `{"error":"Invalid status Value"}`, http.StatusBadRequest)
+		if !valid[update.Status] {
+			http.Error(w, `{"error":"Invalid status value"}`, http.StatusBadRequest)
 			return
 		}
+		existing.Status = update.Status
 
-		existingOperation.Status = updateData.Status
-
-		// Auto-set end time when status is completed or failed
-		if (updateData.Status == "completed" || updateData.Status == "failed") && existingOperation.EndTime == nil {
+		if (update.Status == "completed" || update.Status == "failed") && existing.EndTime == nil {
 			now := time.Now()
-			existingOperation.EndTime = &now
+			existing.EndTime = &now
 		}
-
 	}
 
-	if updateData.Priority != "" {
-		validPriorities := []string{"low", "medium", "high", "critical"}
-		isValid := false
-		for _, priority := range validPriorities {
-			if updateData.Priority == priority {
-				isValid = true
-				break
-			}
+	// Validate priority
+	if update.Priority != "" {
+		valid := map[string]bool{
+			"low":      true,
+			"medium":   true,
+			"high":     true,
+			"critical": true,
 		}
-		if !isValid {
+		if !valid[update.Priority] {
 			http.Error(w, `{"error":"Invalid priority"}`, http.StatusBadRequest)
 			return
 		}
-		existingOperation.Priority = updateData.Priority
-	}
-	if updateData.PeopleRescued >= 0 {
-		existingOperation.PeopleRescued = updateData.PeopleRescued
+		existing.Priority = update.Priority
 	}
 
-	if updateData.PeopleRescued > 0 {
-		existingOperation.PeopleRescued = updateData.PeopleRescued
-
-	}
-	if updateData.EndTime != nil {
-		existingOperation.EndTime = updateData.EndTime
-
+	if update.PeopleRescued >= 0 {
+		existing.PeopleRescued = update.PeopleRescued
 	}
 
-	// Save Updated operation
-	result = db.Save(&existingOperation)
-	if result.Error != nil {
+	if update.EndTime != nil {
+		existing.EndTime = update.EndTime
+	}
+
+	if err := db.Save(&existing).Error; err != nil {
 		http.Error(w, `{"error":"Failed to update rescue operation"}`, http.StatusInternalServerError)
 		return
 	}
 
-	// Send success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(existingOperation)
-
+	json.NewEncoder(w).Encode(existing)
 }
 
 // DeleteRescueOperation - DELETE
