@@ -1,35 +1,28 @@
-# Environment files
+# Sensitive files
 .env
 *.env
+
+# Backend
 backend/.env
-frontend/.env
+backend/tmp/
 
-# Dependencies
-node_modules/
+# Frontend
 frontend/node_modules/
-
-# Build outputs
 frontend/dist/
 frontend/build/
-backend/server
-backend/*.exe
+frontend/.env
+frontend/.npm-cache/
 
 # Cache
 .npm-cache/
-frontend/.npm-cache/
-.vite/
-frontend/.vite/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*

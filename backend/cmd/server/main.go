@@ -5,6 +5,7 @@ import (
 	middlewares "flood-relief-system/backend/middleware"
 	"flood-relief-system/backend/migrations"
 	routers "flood-relief-system/backend/routers"
+
 	"fmt"
 	"log"
 	"net/http"
@@ -14,39 +15,38 @@ import (
 )
 
 func main() {
-	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("⚠️  No .env file found, using system environment variables")
 	}
 
-	// Connect to database
-	config.ConnectDatabase()
+	// DEBUG — check if .env loaded
+	fmt.Println("DEBUG PORT =", os.Getenv("SERVER_PORT"))
 
-	// Run migrations
+	config.ConnectDatabase()
 	migrations.RunMigrations()
 
-	// Setup routes
 	router := routers.SetupRoutes()
 
-	// ✅ REMOVED: Frontend serving code (lines 33-46 deleted)
+	handler := middlewares.LoggerMiddleware(router)
+	handler = middlewares.CORSMiddleware(handler)
 
-	// Apply middleware to API routes only
-	http.Handle("/api/", middlewares.CORSMiddleware(middlewares.LoggerMiddleware(router)))
-
-	// Get port from environment
-	port := os.Getenv("PORT")
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8081"
+		port = "8080"
 	}
 
-	addr := fmt.Sprintf("0.0.0.0:%s", port)
+	host := os.Getenv("SERVER_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+
+	addr := fmt.Sprintf("%s:%s", host, port)
 
 	log.Printf("🚀 Server starting on http://%s\n", addr)
 	log.Printf("📚 Environment: %s\n", os.Getenv("ENV"))
 
-	// Start server
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatal("❌ Server failed to start:", err)
 	}
 }
