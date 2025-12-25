@@ -57,18 +57,24 @@ function HelpRequests() {
 
    // FETCH ALL REQUESTS
    const fetchHelpRequests = async () => {
-      try {
-         setLoading(true);
-         setError(null);
-         const response = await helpRequestsAPI.getAll();
-         setRequests(response.data || []);
-      } catch (err) {
-         console.error('Error fetching help requests:', err)
-         setError('Failed to load help requests');
-      } finally {
-         setLoading(false);
-      }
-   };
+   try {
+      setLoading(true);
+      setError(null);
+
+      const response = await helpRequestsAPI.getAll();
+      
+      // ✅ FIX: Ensure it's an array
+      const requestsData = Array.isArray(response.data) ? response.data : [];
+      
+      setRequests(requestsData);
+
+   } catch (err) {
+      console.error('Error fetching help requests:', err);
+      setError('Failed to load help requests');
+   } finally {
+      setLoading(false);
+   }
+};
 
    useEffect(() => {
       fetchHelpRequests();

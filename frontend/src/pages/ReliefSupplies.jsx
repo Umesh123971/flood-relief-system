@@ -26,24 +26,28 @@ function ReliefSupplies() {
    // FETCH ALL SUPPLIES (READ)
    // ========================================
    const fetchSupplies = async () => {
-      try {
-         console.log('📡 Fetching relief supplies...');
-         setLoading(true);
-         setError(null);
+   try {
+      console.log('📡 Fetching relief supplies...');
+      setLoading(true);
+      setError(null);
 
-         const response = await reliefSuppliesAPI.getAll();
+      const response = await reliefSuppliesAPI.getAll();
 
-         setSupplies(response.data || []);
-         console.log('✅ Fetched', response.data.length, 'supplies');
+      // ✅ ADD SAFETY CHECK
+      const suppliesData = Array.isArray(response.data) 
+         ? response.data 
+         : [];
 
-      } catch (err) {
-         console.error('❌ Error:', err);
-         setError('Failed to load relief supplies. Make sure backend is running.');
+      setSupplies(suppliesData);
+      console.log('✅ Fetched', suppliesData.length, 'supplies');
 
-      } finally {
-         setLoading(false);
-      }
-   };
+   } catch (err) {
+      console.error('❌ Error:', err);
+      setError('Failed to load relief supplies. Make sure backend is running.');
+   } finally {
+      setLoading(false);
+   }
+};
 
    useEffect(() => {
       fetchSupplies();

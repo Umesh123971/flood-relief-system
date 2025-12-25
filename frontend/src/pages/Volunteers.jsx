@@ -45,27 +45,29 @@ import { volunteersAPI } from '../services/api';
 
 
     // FETCH ALL VOLUNTEERS (READ)
-    const fetchVolunteers = async () =>{
-        try {
-            console.log('📡 Fetching volunteers...');
-            setLoading(true);
-            setError(null); //To clear old errors before starting a new API request
-        
-            // Call backend API (GET http://localhost:8081/api/v1/volunteers)
-            const response = await volunteersAPI.getAll();
-          
-            setVolunteers (response.data || []);
-            console.log('✅ Fetched volunteers', response.data.length, 'volunteers');
-                                                //.length → number of items in that array + volunteers
-                        
-        } catch(err){
-            console.error('Error',err); //Used only for developers, not users
-            setError('Failed to load volunteers. Make sure backend is running');
-        } finally {
-            setLoading(false); //steop loading data
-        }
+    const fetchVolunteers = async () => {
+   try {
+      console.log('📡 Fetching volunteers...');
+      setLoading(true);
+      setError(null);
 
-    };
+      const response = await volunteersAPI.getAll();
+      
+      // ✅ ADD SAFETY CHECK
+      const volunteersData = Array.isArray(response.data) 
+         ? response.data 
+         : [];
+      
+      setVolunteers(volunteersData);
+      console.log('✅ Fetched', volunteersData.length, 'volunteers');
+
+   } catch (err) {
+      console.error('❌ Error:', err);
+      setError('Failed to load volunteers. Make sure backend is running.');
+   } finally {
+      setLoading(false);
+   }
+};
           // Run when page loads
           useEffect(()=>{
             fetchVolunteers();

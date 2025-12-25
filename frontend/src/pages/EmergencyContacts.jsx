@@ -35,22 +35,28 @@ function EmergencyContacts() {
 
    // FETCH ALL EMERGENCY CONTACTS (READ)
    const fetchContacts = async () => {
-      try {
-         console.log('📡 Fetching emergency contacts...');
-         setLoading(true);
-         setError(null);
+   try {
+      console.log('📡 Fetching emergency contacts...');
+      setLoading(true);
+      setError(null);
 
-         const response = await emergencyContactsAPI.getAll();
-         setContacts(response.data || []);
-         console.log('✅ Fetched', response.data.length, 'contacts');
+      const response = await emergencyContactsAPI.getAll();
+      
+      // ✅ ADD SAFETY CHECK
+      const contactsData = Array.isArray(response.data) 
+         ? response.data 
+         : [];
+      
+      setContacts(contactsData);
+      console.log('✅ Fetched', contactsData.length, 'contacts');
 
-      } catch (err) {
-         console.error('❌ Error:', err);
-         setError('Failed to load emergency contacts. Make sure backend is running.');
-      } finally {
-         setLoading(false);
-      }
-   };
+   } catch (err) {
+      console.error('❌ Error:', err);
+      setError('Failed to load emergency contacts. Make sure backend is running.');
+   } finally {
+      setLoading(false);
+   }
+};
 
    useEffect(() => {
       fetchContacts();

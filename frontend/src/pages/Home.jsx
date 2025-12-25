@@ -13,34 +13,39 @@ function Home() {
    const [loading, setLoading] = useState(true);
 
    // Fetch statistics
-   const fetchStats = async () => {
-      try {
-         setLoading(true);
+  const fetchStats = async () => {
+   try {
+      setLoading(true);
 
-         // Fetch help requests
-         const requestsResponse = await helpRequestsAPI.getAll();
-         const requests = requestsResponse.data || [];
+      // Fetch help requests
+      const requestsResponse = await helpRequestsAPI.getAll();
+      // ✅ ADD SAFETY CHECK
+      const requests = Array.isArray(requestsResponse.data) 
+         ? requestsResponse.data 
+         : [];
 
-         // Fetch volunteers
-         const volunteersResponse = await volunteersAPI.getAll();
-         const volunteers = volunteersResponse.data || [];
+      // Fetch volunteers
+      const volunteersResponse = await volunteersAPI.getAll();
+      // ✅ ADD SAFETY CHECK
+      const volunteers = Array.isArray(volunteersResponse.data) 
+         ? volunteersResponse.data 
+         : [];
 
-         // Calculate statistics
-         setStats({
-            totalRequests: requests.length,
-            pendingRequests: requests.filter(r => r.status === 'pending').length,
-            completedRequests: requests.filter(r => r.status === 'completed').length,
-            totalVolunteers: volunteers.length,
-            availableVolunteers: volunteers.filter(v => v.availability === 'available').length,
-         });
+      // Calculate statistics
+      setStats({
+         totalRequests: requests.length,
+         pendingRequests: requests.filter(r => r.status === 'pending').length,
+         completedRequests: requests.filter(r => r.status === 'completed').length,
+         totalVolunteers: volunteers.length,
+         availableVolunteers: volunteers.filter(v => v.availability === 'available').length,
+      });
 
-      } catch (err) {
-         console.error('❌ Error fetching stats:', err);
-      } finally {
-         setLoading(false);
-      }
-   };
-
+   } catch (err) {
+      console.error('❌ Error fetching stats:', err);
+   } finally {
+      setLoading(false);
+   }
+};
    // Fetch on page load
    useEffect(() => {
       fetchStats();
