@@ -9,43 +9,32 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("⚠️  No .env file found, using system environment variables")
 	}
 
+	// Connect to database
 	config.ConnectDatabase()
+
+	// Run migrations
 	migrations.RunMigrations()
 
+	// Setup routes
 	router := routers.SetupRoutes()
 
-	// ✅ Serve frontend static files (production)
-	frontendPath := "../frontend/dist"
+	// ✅ REMOVED: Frontend serving code (lines 33-46 deleted)
 
-	// API routes with middleware
+	// Apply middleware to API routes only
 	http.Handle("/api/", middlewares.CORSMiddleware(middlewares.LoggerMiddleware(router)))
 
-	// Serve frontend files
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// If file exists, serve it
-		path := filepath.Join(frontendPath, r.URL.Path)
-
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			// If file doesn't exist, serve index.html (for client-side routing)
-			http.ServeFile(w, r, filepath.Join(frontendPath, "index.html"))
-			return
-		}
-
-		// Serve the file
-		http.FileServer(http.Dir(frontendPath)).ServeHTTP(w, r)
-	})
-
+	// Get port from environment
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8081"
@@ -55,8 +44,8 @@ func main() {
 
 	log.Printf("🚀 Server starting on http://%s\n", addr)
 	log.Printf("📚 Environment: %s\n", os.Getenv("ENV"))
-	log.Printf("📁 Serving frontend from: %s\n", frontendPath)
 
+	// Start server
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal("❌ Server failed to start:", err)
 	}
