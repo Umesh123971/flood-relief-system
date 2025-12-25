@@ -1,0 +1,15 @@
+{
+  "name": "flood-relief-system",
+  "version": "1.0.0",
+  "description": "Full-stack Flood Relief Management System",
+  "scripts": {
+    "render-build": "cd frontend && npm install && npm run build && cd ../backend && go build -o server cmd/server/main.go",
+    "start": "cd backend && ./server"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "keywords": ["flood-relief", "disaster-management", "emergency-response"],
+  "author": "Your Name",
+  "license": "MIT"
+}

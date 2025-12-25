@@ -8,19 +8,21 @@ function RescueOperations() {
    const [showForm, setShowForm] = useState(false);
    const [editingOperation, setEditingOperation] = useState(null);
 
-   // ✅ FIXED: team_size = 1, status = 'initiated'
+ 
    const [formData, setFormData] = useState({
       operation_name: '',
       location: '',
       operation_type: 'rescue',
       priority: 'medium',
-      status: 'initiated',  // ✅ Changed from 'active'
-      team_size: 1,         // ✅ Changed from 0
+      status: 'initiated',  
+      team_size: 1,        
       start_time: '',
       description: '',
       help_request_id: 1  
    });
 
+
+   //Fetch All
    const fetchOperations = async () => {
       try {
          console.log('📡 Fetching rescue operations...');
@@ -52,7 +54,7 @@ function RescueOperations() {
       console.log(`📝 ${name} = ${value}`);
    };
 
-   // ✅ FIXED: Added operation_name to payload
+  
    const handleSubmit = async (e) => {
       e.preventDefault();
 
@@ -69,9 +71,9 @@ function RescueOperations() {
             return;
          }
 
-         // ✅ FIXED: Added operation_name
+      
          const payload = {
-            operation_name: formData.operation_name,  // ✅ ADDED!
+            operation_name: formData.operation_name,  
             help_request_id: Number(formData.help_request_id) || 1,
             team_size: Number(formData.team_size),
             vehicle_type: formData.operation_type,
@@ -87,7 +89,7 @@ function RescueOperations() {
 
          alert('✅ Rescue operation created successfully!');
 
-         // ✅ FIXED: Reset with correct defaults
+        
          setFormData({
             operation_name: '',
             location: '',

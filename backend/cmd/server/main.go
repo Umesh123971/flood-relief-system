@@ -5,11 +5,11 @@ import (
 	middlewares "flood-relief-system/backend/middleware"
 	"flood-relief-system/backend/migrations"
 	routers "flood-relief-system/backend/routers"
-
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -20,33 +20,44 @@ func main() {
 		log.Println("⚠️  No .env file found, using system environment variables")
 	}
 
-	// DEBUG — check if .env loaded
-	fmt.Println("DEBUG PORT =", os.Getenv("SERVER_PORT"))
-
 	config.ConnectDatabase()
 	migrations.RunMigrations()
 
 	router := routers.SetupRoutes()
 
-	handler := middlewares.LoggerMiddleware(router)
-	handler = middlewares.CORSMiddleware(handler)
+	// ✅ Serve frontend static files (production)
+	frontendPath := "../frontend/dist"
 
-	port := os.Getenv("SERVER_PORT")
+	// API routes with middleware
+	http.Handle("/api/", middlewares.CORSMiddleware(middlewares.LoggerMiddleware(router)))
+
+	// Serve frontend files
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// If file exists, serve it
+		path := filepath.Join(frontendPath, r.URL.Path)
+
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			// If file doesn't exist, serve index.html (for client-side routing)
+			http.ServeFile(w, r, filepath.Join(frontendPath, "index.html"))
+			return
+		}
+
+		// Serve the file
+		http.FileServer(http.Dir(frontendPath)).ServeHTTP(w, r)
+	})
+
+	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 
-	host := os.Getenv("SERVER_HOST")
-	if host == "" {
-		host = "localhost"
-	}
-
-	addr := fmt.Sprintf("%s:%s", host, port)
+	addr := fmt.Sprintf("0.0.0.0:%s", port)
 
 	log.Printf("🚀 Server starting on http://%s\n", addr)
 	log.Printf("📚 Environment: %s\n", os.Getenv("ENV"))
+	log.Printf("📁 Serving frontend from: %s\n", frontendPath)
 
-	if err := http.ListenAndServe(addr, handler); err != nil {
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal("❌ Server failed to start:", err)
 	}
 }
