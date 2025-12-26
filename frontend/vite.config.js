@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,  
-    host: true   // Optional: Allows access from network
+    host: true,   // Optional: Allows access from network
+    historyApiFallback: true
   }
 })
