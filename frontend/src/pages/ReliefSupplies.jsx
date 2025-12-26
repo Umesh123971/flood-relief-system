@@ -195,9 +195,10 @@ function ReliefSupplies() {
          if (formData.donor_phone && formData.donor_phone.trim()) {
             cleanedData.donor_phone = formData.donor_phone.trim();
          }
-         if (formData.expiry_date) {
-            cleanedData.expiry_date = formData.expiry_date;
+        if (formData.expiry_date) {
+            cleanedData.expiry_date = new Date(formData.expiry_date).toISOString();
          }
+
          if (formData.notes && formData.notes.trim()) {
             cleanedData.notes = formData.notes.trim();
          }
