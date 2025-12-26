@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { reliefSuppliesAPI } from '../services/api';
 
 function ReliefSupplies() {
-   // ========================================
+
    // STATE MANAGEMENT
-   // ========================================
+ 
    const [supplies, setSupplies] = useState([]);
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
@@ -12,19 +12,21 @@ function ReliefSupplies() {
    const [editingSupply, setEditingSupply] = useState(null);
 
    // FORM DATA STATE
-   const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
       item_name: '',
-      category: 'food',
+      category: 'Food',
       quantity: 0,
       unit: 'kg',
       donor_name: '',
-      storage_location: '',
-      is_available: true
+      donor_phone: '',         
+      location: '',            
+      status: 'Available', 
+      expiry_date:'',    
+      notes: ''                
    });
-
-   // ========================================
+  
    // FETCH ALL SUPPLIES (READ)
-   // ========================================
+
    const fetchSupplies = async () => {
    try {
       console.log('📡 Fetching relief supplies...');
@@ -96,8 +98,11 @@ function ReliefSupplies() {
             quantity: 0,
             unit: 'kg',
             donor_name: '',
-            storage_location: '',
-            is_available: true
+            donor_phone: '',
+            location: '',
+            status: 'Available',
+            expiry_date:'',
+            notes: ''
          });
 
          setShowForm(false);
@@ -123,8 +128,11 @@ function ReliefSupplies() {
          quantity: supply.quantity,
          unit: supply.unit,
          donor_name: supply.donor_name || '',
-         storage_location: supply.storage_location || '',
-         is_available: supply.is_available
+         donor_phone: supply.donor_phone || '',
+         location: supply.location || '',
+         status: supply.status || 'Available',
+         expiry_date: supply.expiry_date || '',
+         notes: supply.notes || ''
       });
 
       setShowForm(true);
@@ -152,8 +160,11 @@ function ReliefSupplies() {
             quantity: 0,
             unit: 'kg',
             donor_name: '',
-            storage_location: '',
-            is_available: true
+            donor_phone: '',
+            location: '',
+            status: 'Available',
+            expiry_date:'',
+            notes: ''
          });
 
          setEditingSupply(null);
@@ -176,16 +187,19 @@ function ReliefSupplies() {
          quantity: 0,
          unit: 'kg',
          donor_name: '',
-         storage_location: '',
-         is_available: true
+         donor_phone: '',
+         location: '',
+         status: 'Available',
+         expiry_date:'',
+         notes: ''
       });
       setEditingSupply(null);
       setShowForm(false);
    };
 
-   // ========================================
+   
    // DELETE SUPPLY
-   // ========================================
+  
    const handleDelete = async (id) => {
       if (!window.confirm('⚠️ Are you sure you want to delete this supply?')) {
          return;
@@ -207,7 +221,7 @@ function ReliefSupplies() {
       }
    };
 
-   // ========================================
+  
    // GET CATEGORY ICON
    // ========================================
    const getCategoryIcon = (category) => {
@@ -357,6 +371,76 @@ function ReliefSupplies() {
                         placeholder="Enter donor name"
                      />
                   </div>
+
+                 {/* Donor Phone - ADD THIS */}
+                  <div>
+                     <label className="block text-gray-700 font-semibold mb-2">
+                        Donor Phone
+                     </label>
+                     <input
+                        type="text"
+                        name="donor_phone"
+                        value={formData.donor_phone}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Enter donor phone"
+                     />
+                  </div>
+
+
+                  {/* Status - REPLACE is_available checkbox */}
+                  <div>
+                     <label className="block text-gray-700 font-semibold mb-2">
+                        Status
+                     </label>
+                     <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                     >
+                        <option value="Available">Available</option>
+                        <option value="distributed">Distributed</option>
+                        <option value="expired">Expired</option>
+                     </select>
+                  </div>
+
+
+
+                  {/* Expiry Date - ADD THIS */}
+                  <div>
+                     <label className="block text-gray-700 font-semibold mb-2">
+                        Expiry Date
+                     </label>
+                     <input
+                        type="date"
+                        name="expiry_date"
+                        value={formData.expiry_date}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Enter expiry date"
+                     />
+                  </div>
+
+                 {/* Notes - ADD THIS */}
+                  <div>
+                     <label className="block text-gray-700 font-semibold mb-2">
+                        Notes
+                     </label>
+                     <textarea
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Additional notes"
+                     />
+                  </div>
+
+
+
+
+
 
                   {/* Storage Location */}
                   <div>
