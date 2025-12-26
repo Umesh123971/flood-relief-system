@@ -94,7 +94,7 @@ function ReliefSupplies() {
 
          setFormData({
             item_name: '',
-            category: 'food',
+            category: 'Food',
             quantity: 0,
             unit: 'kg',
             donor_name: '',
@@ -156,7 +156,7 @@ function ReliefSupplies() {
 
          setFormData({
             item_name: '',
-            category: 'food',
+            category: 'Food',
             quantity: 0,
             unit: 'kg',
             donor_name: '',
@@ -183,7 +183,7 @@ function ReliefSupplies() {
    const handleCancelEdit = () => {
       setFormData({
          item_name: '',
-         category: 'food',
+         category: 'Food',
          quantity: 0,
          unit: 'kg',
          donor_name: '',
@@ -226,10 +226,10 @@ function ReliefSupplies() {
    // ========================================
    const getCategoryIcon = (category) => {
       const icons = {
-         food: '🍲',
-         water: '💧',
-         medicine: '💊',
-         clothing: '👕',
+         Food: '🍲',
+         Water: '💧',
+         Medicine: '💊',
+         Clothing: '👕',
          shelter: '⛺',
          other: '📦'
       };
@@ -259,7 +259,7 @@ function ReliefSupplies() {
          <div className="flex justify-between items-center mb-8">
             <div>
                <h1 className="text-3xl font-bold text-gray-800">📦 Relief Supplies</h1>
-               <p className="text-gray-600 mt-1">Total: {supplies.length} | Available: {supplies.filter(s => s.is_available).length}</p>
+               <p className="text-gray-600 mt-1">Total: {supplies.length} | Available: {supplies.filter(s => s.status === 'Available').length}</p>
             </div>
             <button
                onClick={() => setShowForm(!showForm)}
@@ -450,7 +450,7 @@ function ReliefSupplies() {
                      <input
                         type="text"
                         name="storage_location"
-                        value={formData.storage_location}
+                        value={formData.location}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Enter storage location"
@@ -461,7 +461,7 @@ function ReliefSupplies() {
                   <div className="flex items-center">
                      <input
                         type="checkbox"
-                        name="is_available"
+                        name="status"
                         checked={formData.is_available}
                         onChange={handleInputChange}
                         className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
@@ -503,6 +503,7 @@ function ReliefSupplies() {
                supplies.map((supply) => (
                   <div key={supply.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 hover:shadow-lg transition">
                      {/* Header */}
+                     
                      <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
                            <span className="text-3xl">{getCategoryIcon(supply.category)}</span>
@@ -512,12 +513,11 @@ function ReliefSupplies() {
                            </div>
                         </div>
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                           supply.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                           supply.status === 'Available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                           {supply.is_available ? 'Available' : 'Unavailable'}
+                           {supply.status}
                         </span>
                      </div>
-
                      {/* Details */}
                      <div className="space-y-2 mb-4">
                         <div className="flex items-center text-gray-700">
@@ -528,9 +528,9 @@ function ReliefSupplies() {
                               <span className="text-xs">🤝 Donor: {supply.donor_name}</span>
                            </div>
                         )}
-                        {supply.storage_location && (
+                        {supply.location && (
                            <div className="flex items-center text-gray-600">
-                              <span className="text-xs">📍 {supply.storage_location}</span>
+                              <span className="text-xs">📍 {supply.location}</span>
                            </div>
                         )}
                      </div>
