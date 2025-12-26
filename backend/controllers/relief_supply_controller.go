@@ -198,9 +198,9 @@ func UpdateReliefSupply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if updateData.Status != "" {
-		if updateData.Status != "Available" && updateData.Status != "distributed" && updateData.Status != "expired" {
-			http.Error(w, `{"error":"Invalid Status"}`, http.StatusBadRequest)
-			return
+		if updateData.Status != "Available" &&
+			updateData.Status != "Distributed" &&
+			updateData.Status != "Expired" {
 		}
 		existingSupply.Status = updateData.Status
 	}
