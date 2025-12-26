@@ -13,7 +13,7 @@ type ReliefSupply struct {
 	DonorName  string     `gorm:"size:100" json:"donor_name"`
 	DonorPhone string     `gorm:"size:15" json:"donor_phone"`
 	Location   string     `gorm:"size:255;not null" json:"location"`
-	Status     string     `gorm:"size:20;default:'available'" json:"status"`
+	Status     string     `gorm:"size:20;default:'Available'" json:"status"` // ✅ CHANGED FROM 'available' to 'Available'
 	ExpiryDate *time.Time `json:"expiry_date,omitempty"`
 	Notes      string     `gorm:"type:text" json:"notes"`
 	CreatedAt  time.Time  `json:"created_at"`
