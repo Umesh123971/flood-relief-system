@@ -1,34 +1,46 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"flood-relief-system/backend/config"
 	middlewares "flood-relief-system/backend/middleware"
 	"flood-relief-system/backend/migrations"
 	routers "flood-relief-system/backend/routers"
 
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("⚠️  No .env file found, using system environment variables")
-	}
-
-	// DEBUG — check if .env loaded
-	fmt.Println("DEBUG PORT =", os.Getenv("SERVER_PORT"))
+	_ = godotenv.Load()
 
 	config.ConnectDatabase()
 	migrations.RunMigrations()
 
-	router := routers.SetupRoutes()
+	// ------------------------
+	// API ROUTER
+	// ------------------------
+	apiRouter := routers.SetupRoutes()
 
-	handler := middlewares.LoggerMiddleware(router)
+	// ------------------------
+	// MAIN ROUTER
+	// ------------------------
+	mainRouter := http.NewServeMux()
+
+	// 1️⃣ API routes
+	mainRouter.Handle("/api/", apiRouter)
+
+	// 2️⃣ Serve React static files
+	frontendPath := "./frontend/dist"
+	mainRouter.Handle("/", spaHandler(frontendPath))
+
+	// ------------------------
+	// Middlewares
+	// ------------------------
+	handler := middlewares.LoggerMiddleware(mainRouter)
 	handler = middlewares.CORSMiddleware(handler)
 
 	port := os.Getenv("SERVER_PORT")
@@ -36,17 +48,32 @@ func main() {
 		port = "8080"
 	}
 
-	host := os.Getenv("SERVER_HOST")
-	if host == "" {
-		host = "localhost"
-	}
+	addr := ":" + port
+	log.Println("🚀 Server running at http://localhost" + addr)
 
-	addr := fmt.Sprintf("%s:%s", host, port)
+	log.Fatal(http.ListenAndServe(addr, handler))
+}
 
-	log.Printf("🚀 Server starting on http://%s\n", addr)
-	log.Printf("📚 Environment: %s\n", os.Getenv("ENV"))
+func spaHandler(staticPath string) http.Handler {
+	indexPath := filepath.Join(staticPath, "index.html")
 
-	if err := http.ListenAndServe(addr, handler); err != nil {
-		log.Fatal("❌ Server failed to start:", err)
-	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// If API request → skip
+		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Try to serve static file
+		path := filepath.Join(staticPath, r.URL.Path)
+
+		if _, err := os.Stat(path); err == nil {
+			http.ServeFile(w, r, path)
+			return
+		}
+
+		// Fallback → index.html
+		http.ServeFile(w, r, indexPath)
+	})
 }
