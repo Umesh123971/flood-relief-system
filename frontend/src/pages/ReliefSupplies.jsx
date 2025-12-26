@@ -227,11 +227,10 @@ function ReliefSupplies() {
    const getCategoryIcon = (category) => {
       const icons = {
          Food: '🍲',
-         Water: '💧',
-         Medicine: '💊',
+         Medical: '💊',
          Clothing: '👕',
-         shelter: '⛺',
-         other: '📦'
+         Shelter: '⛺',
+         Other: '📦'
       };
       return icons[category] || '📦';
    };
@@ -312,12 +311,12 @@ function ReliefSupplies() {
                            onChange={handleInputChange}
                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         >
-                           <option value="food">🍲 Food</option>
-                           <option value="water">💧 Water</option>
-                           <option value="medicine">💊 Medicine</option>
-                           <option value="clothing">👕 Clothing</option>
-                           <option value="shelter">⛺ Shelter</option>
-                           <option value="other">📦 Other</option>
+                           <option value="Food">🍲 Food</option>
+                           <option value="Water">💧 Water</option>
+                           <option value="Medicine">💊 Medicine</option>
+                           <option value="Clothing">👕 Clothing</option>
+                           <option value="Shelter">⛺ Shelter</option>
+                           <option value="Other">📦 Other</option>
                         </select>
                      </div>
 
@@ -449,7 +448,7 @@ function ReliefSupplies() {
                      </label>
                      <input
                         type="text"
-                        name="storage_location"
+                        name="location"
                         value={formData.location}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -457,19 +456,7 @@ function ReliefSupplies() {
                      />
                   </div>
 
-                  {/* Availability Checkbox */}
-                  <div className="flex items-center">
-                     <input
-                        type="checkbox"
-                        name="status"
-                        checked={formData.is_available}
-                        onChange={handleInputChange}
-                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                     />
-                     <label className="ml-2 text-gray-700 font-semibold">
-                        Available for Distribution
-                     </label>
-                  </div>
+                
 
                   {/* Submit Buttons */}
                   <div className="flex gap-4 pt-4">
