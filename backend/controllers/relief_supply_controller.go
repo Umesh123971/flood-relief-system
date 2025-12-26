@@ -209,6 +209,10 @@ func UpdateReliefSupply(w http.ResponseWriter, r *http.Request) {
 		existingSupply.Notes = updateData.Notes
 	}
 
+	if updateData.ExpiryDate != nil {
+		existingSupply.ExpiryDate = updateData.ExpiryDate
+	}
+
 	// Save updates
 	result = db.Save(&existingSupply)
 	if result.Error != nil {
