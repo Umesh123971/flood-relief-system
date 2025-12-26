@@ -289,13 +289,15 @@ func GetSuppliesByCategory(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ...existing code...
+
 // Get only available supplies
 func GetAvailableSupplies(w http.ResponseWriter, r *http.Request) {
 
 	var supplies []models.ReliefSupply
 	db := config.GetDB()
 
-	result := db.Where("status = ?", "available").Order("created_at DESC").Find(&supplies)
+	result := db.Where("status = ?", "Available").Order("created_at DESC").Find(&supplies)
 	if result.Error != nil {
 		http.Error(w, `{"error":"Failed to fetch available supplies"}`, http.StatusInternalServerError)
 		return

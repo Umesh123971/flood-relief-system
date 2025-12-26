@@ -299,7 +299,7 @@ function ReliefSupplies() {
                      />
                   </div>
 
-                  {/* Category & Unit */}
+                   {/* Category & Unit */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <div>
                         <label className="block text-gray-700 font-semibold mb-2">
@@ -312,8 +312,7 @@ function ReliefSupplies() {
                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         >
                            <option value="Food">🍲 Food</option>
-                           <option value="Water">💧 Water</option>
-                           <option value="Medicine">💊 Medicine</option>
+                           <option value="Medical">💊 Medical</option>
                            <option value="Clothing">👕 Clothing</option>
                            <option value="Shelter">⛺ Shelter</option>
                            <option value="Other">📦 Other</option>
@@ -441,16 +440,18 @@ function ReliefSupplies() {
 
 
 
+                
                   {/* Storage Location */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
-                        Storage Location
+                        Storage Location <span className="text-red-500">*</span>
                      </label>
                      <input
                         type="text"
                         name="location"
                         value={formData.location}
                         onChange={handleInputChange}
+                        required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Enter storage location"
                      />
