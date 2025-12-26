@@ -26,7 +26,6 @@ function ReliefSupplies() {
    });
   
    // FETCH ALL SUPPLIES (READ)
-
    const fetchSupplies = async () => {
    try {
       console.log('📡 Fetching relief supplies...');
@@ -82,12 +81,39 @@ function ReliefSupplies() {
       try {
          console.log('📤 Creating new supply...', formData);
 
-         if (!formData.item_name || !formData.quantity) {
-            alert('❌ Item name and quantity are required!');
+         // ✅ FIXED - Added location validation
+         if (!formData.item_name || !formData.quantity || !formData.location) {
+            alert('❌ Item name, quantity, and location are required!');
             return;
          }
 
-         await reliefSuppliesAPI.create(formData);
+         // ✅ CLEAN DATA - Remove empty optional fields
+         const cleanedData = {
+            item_name: formData.item_name.trim(),
+            category: formData.category,
+            quantity: parseInt(formData.quantity),
+            unit: formData.unit,
+            location: formData.location.trim(),
+            status: formData.status,
+         };
+
+         // Only add optional fields if they have values
+         if (formData.donor_name && formData.donor_name.trim()) {
+            cleanedData.donor_name = formData.donor_name.trim();
+         }
+         if (formData.donor_phone && formData.donor_phone.trim()) {
+            cleanedData.donor_phone = formData.donor_phone.trim();
+         }
+         if (formData.expiry_date) {
+            cleanedData.expiry_date = formData.expiry_date;
+         }
+         if (formData.notes && formData.notes.trim()) {
+            cleanedData.notes = formData.notes.trim();
+         }
+
+         console.log('📤 Sending cleaned data:', cleanedData);
+
+         await reliefSuppliesAPI.create(cleanedData);
 
          console.log('✅ Supply created successfully!');
          alert('✅ Relief supply created successfully!');
@@ -110,7 +136,8 @@ function ReliefSupplies() {
 
       } catch (err) {
          console.error('❌ Error creating supply:', err);
-         alert('❌ Failed to create relief supply. Check console for details.');
+         console.error('❌ Error response:', err.response?.data);
+         alert(`❌ Failed to create relief supply: ${err.response?.data?.error || err.message}`);
       }
    };
 
@@ -131,7 +158,7 @@ function ReliefSupplies() {
          donor_phone: supply.donor_phone || '',
          location: supply.location || '',
          status: supply.status || 'Available',
-         expiry_date: supply.expiry_date || '',
+         expiry_date: supply.expiry_date ? supply.expiry_date.split('T')[0] : '',
          notes: supply.notes || ''
       });
 
@@ -144,12 +171,39 @@ function ReliefSupplies() {
       try {
          console.log('📤 Updating supply ID:', editingSupply.id, formData);
 
-         if (!formData.item_name || !formData.quantity) {
-            alert('❌ Item name and quantity are required!');
+         // ✅ FIXED - Added location validation
+         if (!formData.item_name || !formData.quantity || !formData.location) {
+            alert('❌ Item name, quantity, and location are required!');
             return;
          }
 
-         await reliefSuppliesAPI.update(editingSupply.id, formData);
+         // ✅ CLEAN DATA - Remove empty optional fields
+         const cleanedData = {
+            item_name: formData.item_name.trim(),
+            category: formData.category,
+            quantity: parseInt(formData.quantity),
+            unit: formData.unit,
+            location: formData.location.trim(),
+            status: formData.status,
+         };
+
+         // Only add optional fields if they have values
+         if (formData.donor_name && formData.donor_name.trim()) {
+            cleanedData.donor_name = formData.donor_name.trim();
+         }
+         if (formData.donor_phone && formData.donor_phone.trim()) {
+            cleanedData.donor_phone = formData.donor_phone.trim();
+         }
+         if (formData.expiry_date) {
+            cleanedData.expiry_date = formData.expiry_date;
+         }
+         if (formData.notes && formData.notes.trim()) {
+            cleanedData.notes = formData.notes.trim();
+         }
+
+         console.log('📤 Sending cleaned update data:', cleanedData);
+
+         await reliefSuppliesAPI.update(editingSupply.id, cleanedData);
 
          console.log('✅ Supply updated successfully!');
          alert('✅ Relief supply updated successfully!');
@@ -173,7 +227,8 @@ function ReliefSupplies() {
 
       } catch (err) {
          console.error('❌ Error updating supply:', err);
-         alert('❌ Failed to update relief supply. Check console for details.');
+         console.error('❌ Error response:', err.response?.data);
+         alert(`❌ Failed to update relief supply: ${err.response?.data?.error || err.message}`);
       }
    };
 
@@ -349,9 +404,25 @@ function ReliefSupplies() {
                         value={formData.quantity}
                         onChange={handleInputChange}
                         required
-                        min="0"
+                        min="1"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Enter quantity"
+                     />
+                  </div>
+
+                  {/* Storage Location */}
+                  <div>
+                     <label className="block text-gray-700 font-semibold mb-2">
+                        Storage Location <span className="text-red-500">*</span>
+                     </label>
+                     <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="Enter storage location"
                      />
                   </div>
 
@@ -370,7 +441,7 @@ function ReliefSupplies() {
                      />
                   </div>
 
-                 {/* Donor Phone - ADD THIS */}
+                 {/* Donor Phone */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Donor Phone
@@ -385,8 +456,7 @@ function ReliefSupplies() {
                      />
                   </div>
 
-
-                  {/* Status - REPLACE is_available checkbox */}
+                  {/* Status */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Status
@@ -403,9 +473,7 @@ function ReliefSupplies() {
                      </select>
                   </div>
 
-
-
-                  {/* Expiry Date - ADD THIS */}
+                  {/* Expiry Date */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Expiry Date
@@ -416,11 +484,10 @@ function ReliefSupplies() {
                         value={formData.expiry_date}
                         onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter expiry date"
                      />
                   </div>
 
-                 {/* Notes - ADD THIS */}
+                 {/* Notes */}
                   <div>
                      <label className="block text-gray-700 font-semibold mb-2">
                         Notes
@@ -434,30 +501,6 @@ function ReliefSupplies() {
                         placeholder="Additional notes"
                      />
                   </div>
-
-
-
-
-
-
-                
-                  {/* Storage Location */}
-                  <div>
-                     <label className="block text-gray-700 font-semibold mb-2">
-                        Storage Location <span className="text-red-500">*</span>
-                     </label>
-                     <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter storage location"
-                     />
-                  </div>
-
-                
 
                   {/* Submit Buttons */}
                   <div className="flex gap-4 pt-4">
@@ -491,7 +534,6 @@ function ReliefSupplies() {
                supplies.map((supply) => (
                   <div key={supply.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500 hover:shadow-lg transition">
                      {/* Header */}
-                     
                      <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-2">
                            <span className="text-3xl">{getCategoryIcon(supply.category)}</span>
@@ -506,6 +548,7 @@ function ReliefSupplies() {
                            {supply.status}
                         </span>
                      </div>
+                     
                      {/* Details */}
                      <div className="space-y-2 mb-4">
                         <div className="flex items-center text-gray-700">
@@ -519,6 +562,11 @@ function ReliefSupplies() {
                         {supply.location && (
                            <div className="flex items-center text-gray-600">
                               <span className="text-xs">📍 {supply.location}</span>
+                           </div>
+                        )}
+                        {supply.expiry_date && (
+                           <div className="flex items-center text-gray-600">
+                              <span className="text-xs">📅 Expires: {new Date(supply.expiry_date).toLocaleDateString()}</span>
                            </div>
                         )}
                      </div>

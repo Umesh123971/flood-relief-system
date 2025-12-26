@@ -23,9 +23,8 @@ func CreateReliefSupply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//validation
-	if supply.ItemName == "" || supply.Category == "" || supply.Quantity <= 0 || supply.Location == "" {
-
-		http.Error(w, `{"error":"Item name,category,quantity,unit and location are required fields and "}`, http.StatusBadRequest)
+	if supply.ItemName == "" || supply.Category == "" || supply.Quantity <= 0 || supply.Unit == "" || supply.Location == "" {
+		http.Error(w, `{"error":"Item name, category, quantity, unit and location are required fields"}`, http.StatusBadRequest)
 		return
 	}
 
