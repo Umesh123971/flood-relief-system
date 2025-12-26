@@ -44,9 +44,11 @@ func CreateReliefSupply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set default status
-	if supply.Status == "" {
-		supply.Status = "Available"
+	if supply.Status != "Available" &&
+		supply.Status != "Distributed" &&
+		supply.Status != "Expired" {
+		http.Error(w, `{"error":"Invalid Status"}`, http.StatusBadRequest)
+		return
 	}
 
 	// Save to database
@@ -89,7 +91,7 @@ func GetAllReliefSupplies(w http.ResponseWriter, r *http.Request) {
 
 	//success response
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(supplies)
 
 }
