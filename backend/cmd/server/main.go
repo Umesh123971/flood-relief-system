@@ -1,46 +1,34 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-
 	"flood-relief-system/backend/config"
 	middlewares "flood-relief-system/backend/middleware"
 	"flood-relief-system/backend/migrations"
 	routers "flood-relief-system/backend/routers"
 
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	_ = godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("⚠️  No .env file found, using system environment variables")
+	}
+
+	// DEBUG — check if .env loaded
+	fmt.Println("DEBUG PORT =", os.Getenv("SERVER_PORT"))
 
 	config.ConnectDatabase()
 	migrations.RunMigrations()
 
-	// ------------------------
-	// API ROUTER
-	// ------------------------
-	apiRouter := routers.SetupRoutes()
+	router := routers.SetupRoutes()
 
-	// ------------------------
-	// MAIN ROUTER
-	// ------------------------
-	mainRouter := http.NewServeMux()
-
-	// 1️⃣ API routes
-	mainRouter.Handle("/api/", apiRouter)
-
-	// 2️⃣ Serve React static files
-	frontendPath := "./frontend/dist"
-	mainRouter.Handle("/", spaHandler(frontendPath))
-
-	// ------------------------
-	// Middlewares
-	// ------------------------
-	handler := middlewares.LoggerMiddleware(mainRouter)
+	handler := middlewares.LoggerMiddleware(router)
 	handler = middlewares.CORSMiddleware(handler)
 
 	port := os.Getenv("SERVER_PORT")
@@ -48,32 +36,17 @@ func main() {
 		port = "8080"
 	}
 
-	addr := ":" + port
-	log.Println("🚀 Server running at http://localhost" + addr)
+	host := os.Getenv("SERVER_HOST")
+	if host == "" {
+		host = "localhost"
+	}
 
-	log.Fatal(http.ListenAndServe(addr, handler))
-}
+	addr := fmt.Sprintf("%s:%s", host, port)
 
-func spaHandler(staticPath string) http.Handler {
-	indexPath := filepath.Join(staticPath, "index.html")
+	log.Printf("🚀 Server starting on http://%s\n", addr)
+	log.Printf("📚 Environment: %s\n", os.Getenv("ENV"))
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// If API request → skip
-		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
-			http.NotFound(w, r)
-			return
-		}
-
-		// Try to serve static file
-		path := filepath.Join(staticPath, r.URL.Path)
-
-		if _, err := os.Stat(path); err == nil {
-			http.ServeFile(w, r, path)
-			return
-		}
-
-		// Fallback → index.html
-		http.ServeFile(w, r, indexPath)
-	})
+	if err := http.ListenAndServe(addr, handler); err != nil {
+		log.Fatal("❌ Server failed to start:", err)
+	}
 }
