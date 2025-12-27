@@ -1,6 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-// ...existing imports...
+
+// ✅ ADD THESE MISSING IMPORTS
+import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import Home from './pages/Home';
+import HelpRequests from './pages/HelpRequests';
+import Volunteers from './pages/Volunteers';
+import EmergencyContacts from './pages/EmergencyContacts';
+import RescueOperations from './pages/RescueOperations';
+import ReliefSupplies from './pages/ReliefSupplies';
+import Login from './pages/Login';
 
 function DebugRouter() {
   const location = useLocation();
